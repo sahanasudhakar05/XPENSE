@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - XP & Rewards</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f8fb; color: #1a1a2e; display: flex; min-height: 100vh; }
+        .sidebar { width: 210px; background: #fff; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; border-right: 1px solid #ebebf0; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 12px 20px; }
+        .brand-icon { width: 32px; height: 32px; background: #6c47ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+        .brand-text { font-size: 15px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: #999; }
+        .xp-section { background: #f8f8fb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .xp-label { font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+        .xp-level { font-size: 22px; font-weight: 700; margin: 2px 0; }
+        .xp-bar { height: 4px; background: #ebebf0; border-radius: 2px; margin-top: 6px; }
+        .xp-fill { height: 4px; background: #6c47ff; border-radius: 2px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #666; font-size: 14px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #f0eeff; color: #6c47ff; }
+        .nav-item.active { background: #6c47ff; color: #fff; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-section { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid #ebebf0; }
+        .user-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-email { font-size: 11px; color: #999; }
+        .logout-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; }
+        .main { margin-left: 210px; padding: 32px 36px; flex: 1; }
+        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { color: #999; font-size: 14px; margin-bottom: 24px; }
+        .level-card { background: linear-gradient(135deg, #6c47ff, #4f46e5); border-radius: 16px; padding: 32px; margin-bottom: 24px; color: #fff; position: relative; overflow: hidden; }
+        .level-card::after { content: '🏆'; position: absolute; right: 32px; top: 50%; transform: translateY(-50%); font-size: 48px; opacity: 0.3; }
+        .level-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        .level-num { font-size: 56px; font-weight: 700; line-height: 1; margin: 8px 0; }
+        .level-xp { font-size: 14px; opacity: 0.8; }
+        .level-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 16px; }
+        .level-fill { height: 100%; background: #fff; border-radius: 3px; transition: width 0.5s; }
+        .level-next { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.7; margin-top: 6px; }
+        .level-badge { display: inline-block; margin-top: 12px; background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 18px 20px; }
+        .stat-label { font-size: 12px; color: #999; display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #f59e0b; }
+        .badges-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .badges-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+        .badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .badge-item { text-align: center; padding: 16px; border-radius: 10px; border: 1px solid #ebebf0; }
+        .badge-item.earned { background: #f0eeff; border-color: #6c47ff20; }
+        .badge-item.locked { opacity: 0.4; }
+        .badge-icon { font-size: 28px; margin-bottom: 6px; }
+        .badge-name { font-size: 12px; font-weight: 600; }
+        .badge-desc { font-size: 11px; color: #999; margin-top: 2px; }
+        .history-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; }
+        .history-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+        .xp-event { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f5f5f8; }
+        .xp-event:last-child { border-bottom: none; }
+        .xp-event-desc { font-size: 14px; }
+        .xp-event-date { font-size: 12px; color: #999; margin-top: 2px; }
+        .xp-points { color: #f59e0b; font-weight: 700; font-size: 15px; }
+        .empty { color: #999; font-size: 14px; text-align: center; padding: 24px; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">💸</div>
+        <div><div class="brand-text">XPense</div><div class="brand-sub">Level up your wallet</div></div>
+    </div>
+    <div class="xp-section">
+        <div class="xp-label"><span>Level</span><span id="sideXP">0 XP</span></div>
+        <div class="xp-level" id="sideLevel">1</div>
+        <div style="font-size:12px;color:#999" id="sideProgress">0/100</div>
+        <div class="xp-bar"><div class="xp-fill" id="sideXpFill" style="width:0%"></div></div>
+    </div>
+    <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+    <a href="expenses.html" class="nav-item">📋 Expenses</a>
+    <a href="budget.html" class="nav-item">🎯 Budgets</a>
+    <a href="challenges.html" class="nav-item">⚡ Challenges</a>
+    <a href="xp.html" class="nav-item active">🏆 XP & Rewards</a>
+    <a href="friends.html" class="nav-item">👥 Friends</a>
+    <a href="monthly-report.html" class="nav-item">📅 Monthly Report</a>
+    <a href="settings.html" class="nav-item">⚙️ Settings</a>
+    <div class="sidebar-bottom">
+        <div class="user-section">
+            <div class="user-avatar" id="avatarLetter">U</div>
+            <div class="user-info">
+                <div class="user-name" id="sideUserName">User</div>
+                <div class="user-email" id="sideUserEmail"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">⇥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-title">XP & Rewards</div>
+    <div class="page-sub">Your progression history.</div>
+
+    <div class="level-card">
+        <div class="level-label">Level</div>
+        <div class="level-num" id="levelNum">1</div>
+        <div class="level-xp" id="levelXp">0 XP</div>
+        <div class="level-bar"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+        <div class="level-next"><span></span><span id="levelNext">0 / 100 to level 2</span></div>
+        <div class="level-badge" id="rankBadge">🌱 Beginner</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Budget kept <span>📅</span></div>
+            <div class="stat-value" id="budgetKeptXP">+0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Weekly discipline <span>⚡</span></div>
+            <div class="stat-value" id="weeklyXP">+0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Challenges <span>🎯</span></div>
+            <div class="stat-value" id="challengeXP">+0</div>
+        </div>
+    </div>
+
+    <div class="badges-card">
+        <div class="badges-title">🏅 Badges</div>
+        <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+
+    <div class="history-card">
+        <div class="history-title">XP history</div>
+        <div id="xpHistory"><p class="empty">No XP earned yet.</p></div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (!userId) window.location.href = 'index.html';
+
+    document.getElementById('sideUserName').textContent = userName || 'User';
+    document.getElementById('avatarLetter').textContent = (userName || 'U')[0].toUpperCase();
+
+    const RANKS = [
+        { min: 0, label: '🌱 Beginner' },
+        { min: 100, label: '⚡ Intermediate' },
+        { min: 300, label: '🔥 Advanced' },
+        { min: 600, label: '💎 Expert' },
+        { min: 1000, label: '👑 Master' }
+    ];
+
+    const BADGES = [
+        { icon: '🌱', name: 'First Step', desc: 'Log your first expense', req: 1, type: 'expenses' },
+        { icon: '💰', name: 'Saver', desc: 'Reach 50 XP', req: 50, type: 'xp' },
+        { icon: '⚡', name: 'Intermediate', desc: 'Reach 100 XP', req: 100, type: 'xp' },
+        { icon: '🔥', name: 'On Fire', desc: 'Reach 300 XP', req: 300, type: 'xp' },
+        { icon: '💎', name: 'Expert', desc: 'Reach 600 XP', req: 600, type: 'xp' },
+        { icon: '👑', name: 'Master', desc: 'Reach 1000 XP', req: 1000, type: 'xp' },
+        { icon: '🎯', name: 'Goal Setter', desc: 'Set a budget', req: 1, type: 'budgets' },
+        { icon: '🏆', name: 'Champion', desc: 'Complete a challenge', req: 1, type: 'challenges' }
+
+    ];
+
+    async function loadXP() {
+        const userRes = await fetch(`${API}/users/${userId}`);
+        let xp = 0;
+        if (userRes.ok) {
+            const user = await userRes.json();
+            xp = user.totalXp || 0;
+            const level = Math.floor(xp / 100) + 1;
+            const progress = xp % 100;
+            const nextLevel = level + 1;
+
+            document.getElementById('sideXP').textContent = xp + ' XP';
+            document.getElementById('sideLevel').textContent = level;
+            document.getElementById('sideProgress').textContent = progress + '/100';
+            document.getElementById('sideXpFill').style.width = progress + '%';
+            document.getElementById('levelNum').textContent = level;
+            document.getElementById('levelXp').textContent = xp + ' XP';
+            document.getElementById('levelFill').style.width = progress + '%';
+            document.getElementById('levelNext').textContent = `${progress} / 100 to level ${nextLevel}`;
+
+            const rank = RANKS.slice().reverse().find(r => xp >= r.min);
+            document.getElementById('rankBadge').textContent = rank.label;
+        }
+
+        const xpRes = await fetch(`${API}/xp?userId=${userId}`);
+        let events = [];
+        if (xpRes.ok) {
+            events = await xpRes.json();
+            renderHistory(events);
+            const budgetXP = events.filter(e => e.source === 'budget_kept').reduce((s, e) => s + e.points, 0);
+            const chalXP = events.filter(e => e.source === 'challenge_complete').reduce((s, e) => s + e.points, 0);
+            document.getElementById('budgetKeptXP').textContent = '+' + budgetXP;
+            document.getElementById('challengeXP').textContent = '+' + chalXP;
+        }
+
+        // fetch counts for badges
+        const expRes = await fetch(`${API}/expenses?userId=${userId}`);
+        let expenseCount = 0;
+        if (expRes.ok) {
+            const expenses = await expRes.json();
+            expenseCount = expenses.length;
+        }
+
+        const budRes = await fetch(`${API}/budgets?userId=${userId}`);
+        let budgetCount = 0;
+        if (budRes.ok) {
+            const budgets = await budRes.json();
+            budgetCount = budgets.length;
+        }
+
+        const chalRes = await fetch(`${API}/challenges/user/${userId}`);
+        let completedChallenges = 0;
+        if (chalRes.ok) {
+            const chals = await chalRes.json();
+            completedChallenges = chals.filter(c => c.completed).length;
+        }
+        const weeklyXP = events.filter(e => {
+            if (!e.createdAt) return false;
+            const d = new Date(e.createdAt);
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return d >= weekAgo && e.points > 0;
+        }).reduce((s, e) => s + e.points, 0);
+        document.getElementById('weeklyXP').textContent = '+' + weeklyXP;
+        renderBadges(xp, expenseCount, budgetCount, completedChallenges);
+    }
+
+    function renderBadges(xp, expenseCount, budgetCount, completedChallenges) {
+        const grid = document.getElementById('badgesGrid');
+        grid.innerHTML = BADGES.map(b => {
+            let earned = false;
+            if (b.type === 'xp') earned = xp >= b.req;
+            if (b.type === 'expenses') earned = expenseCount >= b.req;
+            if (b.type === 'budgets') earned = budgetCount >= b.req;
+            if (b.type === 'challenges') earned = completedChallenges >= b.req;
+            return `
+        <div class="badge-item ${earned ? 'earned' : 'locked'}">
+            <div class="badge-icon">${b.icon}</div>
+            <div class="badge-name">${b.name}</div>
+            <div class="badge-desc">${b.desc}</div>
+        </div>`;
+        }).join('');
+    }
+
+    function renderHistory(events) {
+        const el = document.getElementById('xpHistory');
+        if (!events.length) { el.innerHTML = '<p class="empty">No XP earned yet.</p>'; return; }
+        el.innerHTML = events.slice().reverse().map(e => `
+            <div class="xp-event">
+                <div>
+                    <div class="xp-event-desc">${e.description || e.source}</div>
+                    <div class="xp-event-date">${e.createdAt ? new Date(e.createdAt).toLocaleDateString('en-IN') : ''}</div>
+                </div>
+                <div class="xp-points" style="color:${e.points < 0 ? '#ef4444' : '#f59e0b'}">${e.points > 0 ? '+' : ''}${e.points} XP</div>
+            </div>`).join('');
+    }
+
+    async function logout() {
+        try {
+            await fetch(`${API}/users/logout`, { method: 'POST' });
+        } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+    loadXP();
+</script>
+</body>
+</html>

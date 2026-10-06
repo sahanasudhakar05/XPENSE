@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Income Setup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f8fb;
+            color: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #ebebf0;
+            width: 100%;
+            max-width: 520px;
+            padding: 40px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ebebf0;
+            border-radius: 3px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #6c47ff;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .step-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .step-desc { font-size: 14px; color: #999; margin-bottom: 28px; line-height: 1.5; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 8px; }
+        .input-wrap { position: relative; }
+        .input-wrap span {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: #999; font-size: 15px;
+        }
+        .input-wrap input {
+            width: 100%; padding: 12px 14px 12px 32px;
+            border: 1px solid #ebebf0; border-radius: 10px;
+            font-size: 15px; color: #1a1a2e; outline: none;
+            transition: border 0.2s;
+        }
+        .input-wrap input:focus { border-color: #6c47ff; }
+        .input-hint { font-size: 12px; color: #999; margin-top: 6px; }
+        .breakdown {
+            background: #f8f8fb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .breakdown-title { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 12px; }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid #ebebf0;
+        }
+        .breakdown-row:last-child { border-bottom: none; font-weight: 700; color: #6c47ff; }
+        .breakdown-row.deduction { color: #ef4444; }
+        .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; }
+        .btn-back {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #ebebf0;
+            border-radius: 10px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { border-color: #999; color: #1a1a2e; }
+        .btn-next {
+            flex: 1;
+            padding: 12px;
+            background: #6c47ff;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-next:hover { background: #5535e0; }
+        .btn-next:disabled { opacity: 0.4; cursor: default; }
+        .error { color: #ef4444; font-size: 13px; margin-top: 8px; display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:25%"></div>
+    </div>
+    <div id="stepContent"></div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'index.html';
+
+    let currentStep = 0;
+    const data = {
+        monthlyIncome: 0,
+        fixedExpenses: 0,
+        savingsTarget: 0,
+        investmentTarget: 0
+    };
+
+    const steps = [
+        {
+            label: 'Step 1 of 4',
+            title: 'What is your monthly take-home salary?',
+            desc: 'Enter the amount that actually hits your bank account after tax deductions.',
+            field: 'monthlyIncome',
+            hint: 'This is your net salary, not gross.',
+            required: true
+        },
+        {
+            label: 'Step 2 of 4',
+            title: 'What are your fixed monthly expenses?',
+            desc: 'Include rent, EMI, subscriptions, and any other recurring fixed costs.',
+            field: 'fixedExpenses',
+            hint: 'These will be automatically deducted from your spendable budget.',
+            required: false
+        },
+        {
+            label: 'Step 3 of 4',
+            title: 'How much do you want to save each month?',
+            desc: 'Set a monthly savings target. This amount will be reserved from your income.',
+            field: 'savingsTarget',
+            hint: 'You can change this anytime from settings.',
+            required: false
+        },
+        {
+            label: 'Step 4 of 4',
+            title: 'Any fixed monthly investments?',
+            desc: 'SIP, RD, PPF or any other regular investments you make each month.',
+            field: 'investmentTarget',
+            hint: 'Enter 0 if you have no fixed investments right now.',
+            required: false
+        }
+    ];
+
+    function getSpendable() {
+        return Math.max(0, data.monthlyIncome - data.fixedExpenses - data.savingsTarget - data.investmentTarget);
+    }
+
+    function renderStep() {
+        const progress = ((currentStep + 1) / (steps.length + 1)) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+
+        if (currentStep >= steps.length) {
+            renderSummary();
+            return;
+        }
+
+        const step = steps[currentStep];
+        document.getElementById('stepContent').innerHTML = `
+            <div class="step-label">${step.label}</div>
+            <h2>${step.title}</h2>
+            <p class="step-desc">${step.desc}</p>
+            <div class="input-group">
+                <label>Amount (₹)</label>
+                <div class="input-wrap">
+                    <span>₹</span>
+                    <input type="number" id="stepInput" placeholder="0" min="0"
+                           value="${data[step.field] > 0 ? data[step.field] : ''}"
+                           oninput="validateInput()" />
+                </div>
+                <div class="input-hint">${step.hint}</div>
+            </div>
+            <div class="error" id="errorMsg">Please enter your monthly income to continue.</div>
+            <div class="nav">
+                ${currentStep > 0 ? '<button class="btn-back" onclick="prevStep()">← Back</button>' : ''}
+                <button class="btn-next" id="nextBtn" onclick="nextStep()">
+                    ${currentStep === steps.length - 1 ? 'See summary →' : 'Next →'}
+                </button>
+            </div>
+        `;
+        document.getElementById('stepInput').focus();
+    }
+
+    function validateInput() {
+        const val = parseFloat(document.getElementById('stepInput').value) || 0;
+        const step = steps[currentStep];
+        const errorEl = document.getElementById('errorMsg');
+        if (step.required && val <= 0) {
+            errorEl.style.display = 'block';
+        } else {
+            errorEl.style.display = 'none';
+        }
+    }
+
+    function nextStep() {
+        const val = parseFloat(document.getElementById('stepInput').value) || 0;
+        const step = steps[currentStep];
+
+        if (step.required && val <= 0) {
+            document.getElementById('errorMsg').style.display = 'block';
+            return;
+        }
+
+        data[step.field] = val;
+        currentStep++;
+        renderStep();
+    }
+
+    function prevStep() {
+        if (currentStep > 0) {
+            currentStep--;
+            renderStep();
+        }
+    }
+
+    function renderSummary() {
+        document.getElementById('progressFill').style.width = '100%';
+        const spendable = getSpendable();
+        const dailyBudget = Math.round(spendable / 30);
+
+        document.getElementById('stepContent').innerHTML = `
+            <div class="step-label">Summary</div>
+            <h2>Here's your monthly breakdown</h2>
+            <p class="step-desc">Based on your inputs, here's how your money is allocated each month.</p>
+
+            <div class="breakdown">
+                <div class="breakdown-title">Monthly Breakdown</div>
+                <div class="breakdown-row">
+                    <span>💰 Take-home salary</span>
+                    <span>₹${data.monthlyIncome.toLocaleString()}</span>
+                </div>
+                <div class="breakdown-row deduction">
+                    <span>🏠 Fixed expenses</span>
+                    <span>- ₹${data.fixedExpenses.toLocaleString()}</span>
+                </div>
+                <div class="breakdown-row deduction">
+                    <span>🏦 Savings target</span>
+                    <span>- ₹${data.savingsTarget.toLocaleString()}</span>
+                </div>
+                <div class="breakdown-row deduction">
+                    <span>📈 Investments</span>
+                    <span>- ₹${data.investmentTarget.toLocaleString()}</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>✅ Spendable budget</span>
+                    <span>₹${spendable.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div class="breakdown">
+                <div class="breakdown-title">Daily Budget</div>
+                <div class="breakdown-row">
+                    <span>📅 Per day to spend</span>
+                    <span style="color:#6c47ff;font-weight:700">₹${dailyBudget.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div class="error" id="saveError"></div>
+            <div class="nav">
+                <button class="btn-back" onclick="prevStep()">← Back</button>
+                <button class="btn-next" onclick="saveAndContinue()">Go to Dashboard →</button>
+            </div>
+        `;
+    }
+
+    async function saveAndContinue() {
+        try {
+            const res = await fetch(`${API}/users/income-setup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    monthlyIncome: data.monthlyIncome.toString(),
+                    fixedExpenses: data.fixedExpenses.toString(),
+                    savingsTarget: data.savingsTarget.toString(),
+                    investmentTarget: data.investmentTarget.toString()
+                })
+            });
+
+            if (res.ok) {
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('saveError').textContent = 'Failed to save. Try again.';
+                document.getElementById('saveError').style.display = 'block';
+            }
+        } catch (e) {
+            document.getElementById('saveError').textContent = 'Server error. Is Spring Boot running?';
+            document.getElementById('saveError').style.display = 'block';
+        }
+    }
+
+    renderStep();
+</script>
+</body>
+</html>

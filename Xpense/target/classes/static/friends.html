@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Friends</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f8fb; color: #1a1a2e; display: flex; min-height: 100vh; }
+        .sidebar { width: 210px; background: #fff; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; border-right: 1px solid #ebebf0; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 12px 20px; }
+        .brand-icon { width: 32px; height: 32px; background: #6c47ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+        .brand-text { font-size: 15px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: #999; }
+        .xp-section { background: #f8f8fb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .xp-label { font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+        .xp-level { font-size: 22px; font-weight: 700; margin: 2px 0; }
+        .xp-bar { height: 4px; background: #ebebf0; border-radius: 2px; margin-top: 6px; }
+        .xp-fill { height: 4px; background: #6c47ff; border-radius: 2px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #666; font-size: 14px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #f0eeff; color: #6c47ff; }
+        .nav-item.active { background: #6c47ff; color: #fff; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-section { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid #ebebf0; }
+        .user-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-email { font-size: 11px; color: #999; }
+        .logout-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; }
+        .main { margin-left: 210px; padding: 32px 36px; flex: 1; }
+        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { color: #999; font-size: 14px; margin-bottom: 24px; }
+        .leaderboard-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .section-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; }
+        .leaderboard-item.me { background: #f0eeff; }
+        .rank-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; background: #9ca3af; }
+        .rank-num.first { background: #f59e0b; }
+        .rank-num.second { background: #9ca3af; }
+        .rank-num.third { background: #d97706; }
+        .lb-avatar { width: 36px; height: 36px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+        .lb-info { flex: 1; }
+        .lb-name { font-size: 14px; font-weight: 600; }
+        .lb-level { font-size: 12px; color: #999; }
+        .lb-xp { color: #f59e0b; font-weight: 700; display: flex; align-items: center; gap: 4px; font-size: 14px; }
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .find-card, .requests-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; }
+        .search-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .search-input { flex: 1; padding: 10px 14px; border: 1px solid #ebebf0; border-radius: 8px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: #6c47ff; }
+        .btn-search { padding: 10px 20px; background: #6c47ff; border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-search:hover { background: #5535e0; }
+        .search-result { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: #f8f8fb; margin-bottom: 8px; }
+        .result-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 12px; }
+        .result-name { flex: 1; font-size: 14px; font-weight: 500; }
+        .btn-add-friend { padding: 6px 14px; background: #6c47ff; border: none; border-radius: 6px; color: #fff; font-size: 12px; cursor: pointer; }
+        .btn-add-friend:hover { background: #5535e0; }
+        .empty { color: #999; font-size: 14px; }
+        .request-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: #f8f8fb; margin-bottom: 8px; }
+        .btn-accept { padding: 6px 14px; background: #22c55e; border: none; border-radius: 6px; color: #fff; font-size: 12px; cursor: pointer; font-weight: 600; }
+        .msg-success { color: #22c55e; font-size: 13px; margin-top: 8px; }
+        .msg-error { color: #ef4444; font-size: 13px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">💸</div>
+        <div><div class="brand-text">XPense</div><div class="brand-sub">Level up your wallet</div></div>
+    </div>
+    <div class="xp-section">
+        <div class="xp-label"><span>Level</span><span id="sideXP">0 XP</span></div>
+        <div class="xp-level" id="sideLevel">1</div>
+        <div style="font-size:12px;color:#999" id="sideProgress">0/100</div>
+        <div class="xp-bar"><div class="xp-fill" id="sideXpFill" style="width:0%"></div></div>
+    </div>
+    <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+    <a href="expenses.html" class="nav-item">📋 Expenses</a>
+    <a href="budget.html" class="nav-item">🎯 Budgets</a>
+    <a href="challenges.html" class="nav-item">⚡ Challenges</a>
+    <a href="xp.html" class="nav-item">🏆 XP & Rewards</a>
+    <a href="friends.html" class="nav-item active">👥 Friends</a>
+    <a href="monthly-report.html" class="nav-item">📅 Monthly Report</a>
+    <a href="settings.html" class="nav-item">⚙️ Settings</a>
+    <div class="sidebar-bottom">
+        <div class="user-section">
+            <div class="user-avatar" id="avatarLetter">U</div>
+            <div class="user-info">
+                <div class="user-name" id="sideUserName">User</div>
+                <div class="user-email" id="sideUserEmail"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">⇥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-title">Friends & Leaderboard</div>
+    <div class="page-sub">Compare XP and rise through the ranks.</div>
+
+    <div class="leaderboard-card">
+        <div class="section-title">👑 Leaderboard</div>
+        <div id="leaderboard"><p class="empty">Loading...</p></div>
+    </div>
+
+    <div class="bottom-grid">
+        <div class="find-card">
+            <div class="section-title">👤 Find friends</div>
+            <div class="search-row">
+                <input class="search-input" id="searchInput" placeholder="Search by display name..." />
+                <button class="btn-search" onclick="searchUsers()">Search</button>
+            </div>
+            <div id="searchResults"></div>
+            <div id="searchMsg"></div>
+        </div>
+        <div class="requests-card">
+            <div class="section-title">👥 Requests</div>
+            <div id="requestsList"><p class="empty">No pending requests.</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (!userId) window.location.href = 'index.html';
+
+    document.getElementById('sideUserName').textContent = userName || 'User';
+    document.getElementById('avatarLetter').textContent = (userName || 'U')[0].toUpperCase();
+
+    async function loadAll() {
+        try {
+            const userRes = await fetch(`${API}/users/${userId}`);
+            if (userRes.ok) {
+                const user = await userRes.json();
+                const xp = user.totalXp || 0;
+                const level = Math.floor(xp / 100) + 1;
+                const progress = xp % 100;
+                document.getElementById('sideXP').textContent = xp + ' XP';
+                document.getElementById('sideLevel').textContent = level;
+                document.getElementById('sideProgress').textContent = progress + '/100';
+                document.getElementById('sideXpFill').style.width = progress + '%';
+
+                const friendsRes = await fetch(`${API}/friends/${userId}`);
+                let friends = [];
+                if (friendsRes.ok) friends = await friendsRes.json();
+                renderLeaderboard([user, ...friends]);
+            }
+
+            loadRequests();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function renderLeaderboard(users) {
+        const sorted = [...users].sort((a, b) => (b.totalXp || 0) - (a.totalXp || 0));
+        const el = document.getElementById('leaderboard');
+        el.innerHTML = sorted.map((u, i) => {
+            const isMe = u.id === userId;
+            const xp = u.totalXp || 0;
+            const level = Math.floor(xp / 100) + 1;
+            const rankClass = i === 0 ? 'first' : i === 1 ? 'second' : i === 2 ? 'third' : '';
+            return `
+            <div class="leaderboard-item ${isMe ? 'me' : ''}">
+                <div class="rank-num ${rankClass}">${i + 1}</div>
+                <div class="lb-avatar">${(u.displayName || 'U')[0].toUpperCase()}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${u.displayName || 'User'}${isMe ? ' (you)' : ''}</div>
+                    <div class="lb-level">Level ${level}</div>
+                </div>
+                <div class="lb-xp">🏆 ${xp} XP</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function searchUsers() {
+        const name = document.getElementById('searchInput').value.trim();
+        if (!name) return;
+
+        const res = await fetch(`${API}/users/search?name=${encodeURIComponent(name)}`);
+        const el = document.getElementById('searchResults');
+        const msgEl = document.getElementById('searchMsg');
+        msgEl.innerHTML = '';
+
+        if (res.ok) {
+            const users = await res.json();
+            const filtered = users.filter(u => u.id !== userId);
+            if (!filtered.length) {
+                el.innerHTML = '<p class="empty">No users found.</p>';
+                return;
+            }
+            el.innerHTML = filtered.map(u => `
+                <div class="search-result">
+                    <div class="result-avatar">${(u.displayName || 'U')[0].toUpperCase()}</div>
+                    <div class="result-name">${u.displayName}</div>
+                    <button class="btn-add-friend" onclick="sendRequest('${u.displayName}', this)">+ Add</button>
+                </div>`).join('');
+        }
+    }
+
+    async function sendRequest(friendName, btn) {
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        const msgEl = document.getElementById('searchMsg');
+
+        const res = await fetch(`${API}/friends/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, friendName })
+        });
+
+        const text = await res.text();
+        if (res.ok) {
+            btn.textContent = 'Sent ✓';
+            btn.style.background = '#22c55e';
+            msgEl.innerHTML = '<p class="msg-success">Friend request sent!</p>';
+        } else {
+            btn.disabled = false;
+            btn.textContent = '+ Add';
+            msgEl.innerHTML = `<p class="msg-error">${text}</p>`;
+        }
+    }
+
+    async function loadRequests() {
+        const res = await fetch(`${API}/friends/requests/${userId}`);
+        const el = document.getElementById('requestsList');
+        if (res.ok) {
+            const requests = await res.json();
+            if (!requests.length) {
+                el.innerHTML = '<p class="empty">No pending requests.</p>';
+                return;
+            }
+            el.innerHTML = requests.map(r => `
+                <div class="request-item">
+                    <div class="result-avatar">${(r.displayName || 'U')[0].toUpperCase()}</div>
+                    <div class="result-name" style="flex:1;font-size:14px;font-weight:500">${r.displayName}</div>
+                    <button class="btn-accept" onclick="acceptRequest('${r.friendshipId}')">Accept</button>
+                </div>`).join('');
+        }
+    }
+
+    async function acceptRequest(friendshipId) {
+        const res = await fetch(`${API}/friends/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ friendshipId })
+        });
+        if (res.ok) loadAll();
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') searchUsers();
+    });
+
+    async function logout() {
+        try {
+            await fetch(`${API}/users/logout`, { method: 'POST' });
+        } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+    loadAll();
+</script>
+</body>
+</html>

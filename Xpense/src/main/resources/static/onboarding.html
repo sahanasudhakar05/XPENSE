@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Setup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: #1a1a2e;
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #2a2a3e;
+            border-radius: 3px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #7c3aed;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .step-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        h2 { font-size: 22px; margin-bottom: 28px; line-height: 1.4; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option {
+            padding: 14px 18px;
+            background: #0f0f1a;
+            border: 2px solid #2a2a3e;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+        .option:hover { border-color: #7c3aed; background: #7c3aed15; }
+        .option.selected { border-color: #7c3aed; background: #7c3aed20; color: #a78bfa; }
+        .nav { display: flex; justify-content: space-between; margin-top: 28px; gap: 12px; }
+        .btn-back {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #2a2a3e;
+            border-radius: 10px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { border-color: #666; color: #fff; }
+        .btn-next {
+            flex: 1;
+            padding: 12px;
+            background: #7c3aed;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .btn-next.enabled { opacity: 1; pointer-events: all; }
+        .btn-next.enabled:hover { background: #6d28d9; }
+
+        /* Personality screen */
+        .personality {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .personality-icon { font-size: 72px; margin-bottom: 16px; }
+        .personality-title { font-size: 26px; font-weight: 700; color: #a78bfa; margin-bottom: 12px; }
+        .personality-desc { color: #888; font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+        .btn-dashboard {
+            width: 100%;
+            padding: 14px;
+            background: #7c3aed;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-dashboard:hover { background: #6d28d9; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+    </div>
+
+    <div id="stepContent"></div>
+</div>
+
+<script>
+    const API = window.location.origin + '/api';
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'index.html';
+
+    let currentStep = 0;
+    const answers = {};
+
+    const steps = [
+        {
+            key: 'incomeSource',
+            label: 'Step 1 of 5',
+            question: "What is your primary source of income?",
+            options: [
+                { label: '💼 Salary', value: 'Salary' },
+                { label: '🧑‍💻 Freelance / Business', value: 'Freelance' },
+                { label: '🎓 Allowance', value: 'Allowance' },
+                { label: '📚 Student / No income yet', value: 'No income' }
+            ]
+        },
+        {
+            key: 'incomeRange',
+            label: 'Step 2 of 5',
+            question: "What is your approximate monthly income?",
+            options: [
+                { label: '< ₹10,000', value: '<10k' },
+                { label: '₹10k – ₹30k', value: '10k-30k' },
+                { label: '₹30k – ₹70k', value: '30k-70k' },
+                { label: '₹70k+', value: '70k+' }
+            ]
+        },
+        {
+            key: 'incomeStability',
+            label: 'Step 3 of 5',
+            question: "How stable is your income?",
+            options: [
+                { label: '🏦 Very stable (fixed salary)', value: 'Very stable' },
+                { label: '📈 Mostly stable', value: 'Mostly stable' },
+                { label: '🌊 Irregular income', value: 'Irregular' }
+            ]
+        },
+        {
+            key: 'financialGoal',
+            label: 'Step 4 of 5',
+            question: "What is your main financial goal right now?",
+            options: [
+                { label: '💰 Save more money', value: 'Save more' },
+                { label: '🛑 Stop overspending', value: 'Stop overspending' },
+                { label: '📊 Track expenses', value: 'Track expenses' },
+                { label: '📈 Plan investments', value: 'Plan investments' },
+                { label: '📋 Budget better', value: 'Budget better' }
+            ]
+        },
+        {
+            key: 'savingFor',
+            label: 'Step 5 of 5',
+            question: "What are you saving for?",
+            options: [
+                { label: '🛡️ Emergency fund', value: 'Emergency fund' },
+                { label: '✈️ Travel', value: 'Travel' },
+                { label: '📱 Gadgets / Shopping', value: 'Gadgets' },
+                { label: '🎓 Education', value: 'Education' },
+                { label: '❌ Not saving yet', value: 'Not saving' }
+            ]
+        }
+    ];
+
+    function getPersonality() {
+        const goal = answers.financialGoal;
+        const saving = answers.savingFor;
+        const stability = answers.incomeStability;
+        const income = answers.incomeRange;
+
+        if (goal === 'Plan investments' && income === '70k+') {
+            return {
+                icon: '🚀',
+                title: 'Growth Investor',
+                desc: "You think long-term and want your money to work for you. You're focused on building wealth through smart investments."
+            };
+        } else if (goal === 'Save more' || goal === 'Budget better') {
+            return {
+                icon: '🧠',
+                title: 'Mindful Budgeter',
+                desc: "You're intentional with your money. You think before you spend and always have a plan. Your future self will thank you."
+            };
+        } else if (saving === 'Travel' || saving === 'Gadgets' || saving === 'Education') {
+            return {
+                icon: '💰',
+                title: 'Future Saver',
+                desc: "You have clear goals and you're saving with purpose. Every rupee you save brings you closer to what you really want."
+            };
+        } else {
+            return {
+                icon: '💸',
+                title: 'Free Spender',
+                desc: "You live in the moment and enjoy your money! Xpense will help you find the balance between enjoying today and securing tomorrow."
+            };
+        }
+    }
+
+    function renderStep() {
+        const progress = ((currentStep + 1) / (steps.length + 1)) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+
+        if (currentStep >= steps.length) {
+            renderPersonality();
+            return;
+        }
+
+        const step = steps[currentStep];
+        const selectedValue = answers[step.key];
+
+        let html = `
+            <div class="step-label">${step.label}</div>
+            <h2>${step.question}</h2>
+            <div class="options">
+        `;
+
+        step.options.forEach(opt => {
+            const selected = selectedValue === opt.value ? 'selected' : '';
+            html += `<div class="option ${selected}" onclick="selectOption('${step.key}', '${opt.value}', this)">${opt.label}</div>`;
+        });
+
+        html += `</div>
+            <div class="nav">
+                ${currentStep > 0 ? '<button class="btn-back" onclick="prevStep()">← Back</button>' : ''}
+                <button class="btn-next ${selectedValue ? 'enabled' : ''}" id="nextBtn" onclick="nextStep()">
+                    ${currentStep === steps.length - 1 ? 'See my result →' : 'Next →'}
+                </button>
+            </div>
+        `;
+
+        document.getElementById('stepContent').innerHTML = html;
+    }
+
+    function selectOption(key, value, el) {
+        answers[key] = value;
+        document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('nextBtn').classList.add('enabled');
+    }
+
+    function nextStep() {
+        const step = steps[currentStep];
+        if (!answers[step.key]) return;
+        currentStep++;
+        renderStep();
+    }
+
+    function prevStep() {
+        if (currentStep > 0) {
+            currentStep--;
+            renderStep();
+        }
+    }
+
+    async function renderPersonality() {
+        document.getElementById('progressFill').style.width = '100%';
+
+        // Save onboarding to backend
+        try {
+            await fetch(`${API}/users/onboarding`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    incomeSource: answers.incomeSource,
+                    incomeRange: answers.incomeRange,
+                    incomeStability: answers.incomeStability,
+                    financialGoal: answers.financialGoal,
+                    savingFor: answers.savingFor
+                })
+            });
+        } catch (e) {
+            console.error('Failed to save onboarding', e);
+        }
+
+        const p = getPersonality();
+        localStorage.setItem('personality', p.title);
+
+        document.getElementById('stepContent').innerHTML = `
+            <div class="personality">
+                <div class="personality-icon">${p.icon}</div>
+                <div class="personality-title">${p.title}</div>
+                <p class="personality-desc">${p.desc}</p>
+                <button class="btn-dashboard" onclick="window.location.href = 'income-setup.html';">
+                    Go to Dashboard →
+                </button>
+            </div>
+        `;
+    }
+    async function logout() {
+        try {
+            await fetch(`${API}/users/logout`, { method: 'POST' });
+        } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+    renderStep();
+</script>
+</body>
+</html>

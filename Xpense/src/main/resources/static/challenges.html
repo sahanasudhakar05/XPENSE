@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Challenges</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f8fb; color: #1a1a2e; display: flex; min-height: 100vh; }
+        .sidebar { width: 210px; background: #fff; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; border-right: 1px solid #ebebf0; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 12px 20px; }
+        .brand-icon { width: 32px; height: 32px; background: #6c47ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+        .brand-text { font-size: 15px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: #999; }
+        .xp-section { background: #f8f8fb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .xp-label { font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+        .xp-level { font-size: 22px; font-weight: 700; margin: 2px 0; }
+        .xp-bar { height: 4px; background: #ebebf0; border-radius: 2px; margin-top: 6px; }
+        .xp-fill { height: 4px; background: #6c47ff; border-radius: 2px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #666; font-size: 14px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #f0eeff; color: #6c47ff; }
+        .nav-item.active { background: #6c47ff; color: #fff; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-section { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid #ebebf0; }
+        .user-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-email { font-size: 11px; color: #999; }
+        .logout-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; }
+        .main { margin-left: 210px; padding: 32px 36px; flex: 1; }
+        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { color: #999; font-size: 14px; margin-bottom: 24px; }
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+        /* Active challenges */
+        .active-section { margin-bottom: 32px; }
+        .active-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+        .active-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .active-title { font-size: 15px; font-weight: 600; }
+        .xp-badge { background: #fff8eb; color: #f59e0b; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; border: 1px solid #fde68a; }
+        .active-desc { font-size: 13px; color: #999; margin-bottom: 12px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: #666; margin-bottom: 6px; }
+        .progress-bar { height: 6px; background: #ebebf0; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .progress-fill { height: 100%; background: #6c47ff; border-radius: 3px; transition: width 0.4s; }
+        .ends-label { font-size: 12px; color: #999; }
+
+        /* Browse grid */
+        .browse-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .browse-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; }
+        .browse-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .browse-icon { width: 36px; height: 36px; background: #f0eeff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .browse-title { font-size: 14px; font-weight: 600; }
+        .browse-desc { font-size: 12px; color: #999; margin-bottom: 12px; line-height: 1.5; }
+        .browse-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 14px; }
+        .browse-xp { color: #f59e0b; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .btn-join { width: 100%; padding: 10px; background: #6c47ff; border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-join:hover { background: #5535e0; }
+        .btn-joined { width: 100%; padding: 10px; background: #f0eeff; border: 1px solid #d4c5ff; border-radius: 8px; color: #6c47ff; font-size: 14px; font-weight: 600; cursor: default; }
+
+        /* History */
+        .history-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f5f5f8; font-size: 14px; }
+        .history-item:last-child { border-bottom: none; }
+        .empty { color: #999; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">💸</div>
+        <div><div class="brand-text">XPense</div><div class="brand-sub">Level up your wallet</div></div>
+    </div>
+    <div class="xp-section">
+        <div class="xp-label"><span>Level</span><span id="sideXP">0 XP</span></div>
+        <div class="xp-level" id="sideLevel">1</div>
+        <div style="font-size:12px;color:#999" id="sideProgress">0/100</div>
+        <div class="xp-bar"><div class="xp-fill" id="sideXpFill" style="width:0%"></div></div>
+    </div>
+    <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+    <a href="expenses.html" class="nav-item">📋 Expenses</a>
+    <a href="budget.html" class="nav-item">🎯 Budgets</a>
+    <a href="challenges.html" class="nav-item active">⚡ Challenges</a>
+    <a href="xp.html" class="nav-item">🏆 XP & Rewards</a>
+    <a href="friends.html" class="nav-item">👥 Friends</a>
+    <a href="monthly-report.html" class="nav-item">📅 Monthly Report</a>
+    <a href="settings.html" class="nav-item">⚙️ Settings</a>
+    <div class="sidebar-bottom">
+        <div class="user-section">
+            <div class="user-avatar" id="avatarLetter">U</div>
+            <div class="user-info">
+                <div class="user-name" id="sideUserName">User</div>
+                <div class="user-email" id="sideUserEmail"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">⇥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-title">Challenges</div>
+    <div class="page-sub">Beat the limit, earn the XP.</div>
+
+    <div class="active-section">
+        <div class="section-title">Your active challenges</div>
+        <div id="activeChallenges"><p class="empty">No active challenges yet. Browse and join one!</p></div>
+    </div>
+
+    <div class="section-title">Browse challenges</div>
+    <div class="browse-grid" id="browseGrid">
+        <p class="empty">Loading...</p>
+    </div>
+
+    <div class="section-title">History</div>
+    <div class="history-card">
+        <div id="historyList"><p class="empty">No completed challenges yet.</p></div>
+    </div>
+</div>
+
+<script>
+    const API = window.location.origin + '/api';
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (!userId) window.location.href = 'index.html';
+
+    document.getElementById('sideUserName').textContent = userName || 'User';
+    document.getElementById('avatarLetter').textContent = (userName || 'U')[0].toUpperCase();
+
+    let allChallenges = [];
+    let userChallenges = [];
+    let expenses = [];
+
+    async function loadAll() {
+        try {
+            // load sidebar XP
+            const userRes = await fetch(`${API}/users/${userId}`);
+            if (userRes.ok) {
+                const user = await userRes.json();
+                const xp = user.totalXp || 0;
+                const level = Math.floor(xp / 100) + 1;
+                const progress = xp % 100;
+                document.getElementById('sideXP').textContent = xp + ' XP';
+                document.getElementById('sideLevel').textContent = level;
+                document.getElementById('sideProgress').textContent = progress + '/100';
+                document.getElementById('sideXpFill').style.width = progress + '%';
+            }
+
+            const [chalRes, userChalRes, expRes] = await Promise.all([
+                fetch(`${API}/challenges`),
+                fetch(`${API}/challenges/user/${userId}`),
+                fetch(`${API}/expenses?userId=${userId}`)
+            ]);
+
+            if (chalRes.ok) allChallenges = await chalRes.json();
+            if (userChalRes.ok) userChallenges = await userChalRes.json();
+            if (expRes.ok) expenses = await expRes.json();
+
+            renderActive();
+            renderBrowse();
+            renderHistory();
+        } catch (e) {
+            console.error('Error loading challenges:', e);
+        }
+    }
+
+    function getCategorySpent(category) {
+        return expenses
+            .filter(e => e.category === category)
+            .reduce((s, e) => s + e.amount, 0);
+    }
+
+    function renderActive() {
+        const joinedIds = userChallenges.filter(uc => !uc.completed).map(uc => uc.challengeId);
+        const active = allChallenges.filter(c => joinedIds.includes(c.id));
+        const el = document.getElementById('activeChallenges');
+
+        if (!active.length) {
+            el.innerHTML = '<p class="empty">No active challenges yet. Browse and join one below!</p>';
+            return;
+        }
+
+        el.innerHTML = active.map(c => {
+            const spent = getCategorySpent(c.category);
+            const pct = Math.min((spent / c.targetValue) * 100, 100);
+            const endDate = c.endDate ? new Date(c.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'soon';
+            return `
+            <div class="active-card">
+                <div class="active-header">
+                    <div class="active-title">${c.title}</div>
+                    <div class="xp-badge">+${c.rewardXp} XP</div>
+                </div>
+                <div class="active-desc">Spend less than ₹${c.targetValue.toLocaleString()} on ${c.category} this month</div>
+                <div class="progress-label">
+                    <span>₹${spent.toLocaleString()} / ₹${c.targetValue.toLocaleString()}</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:${pct}%"></div>
+                </div>
+                <div class="ends-label">⏰ Ends ${endDate}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderBrowse() {
+        const joinedIds = userChallenges.map(uc => uc.challengeId);
+        const el = document.getElementById('browseGrid');
+
+        if (!allChallenges.length) {
+            el.innerHTML = '<p class="empty">No challenges available.</p>';
+            return;
+        }
+
+        const icons = { Food: '🍔', Groceries: '🛒', Travel: '✈️', Entertainment: '🎮', 'Online Shopping': '📦' };
+
+        el.innerHTML = allChallenges.map(c => {
+            const joined = joinedIds.includes(c.id);
+            const icon = icons[c.category] || '🎯';
+            return `
+            <div class="browse-card">
+                <div class="browse-top">
+                    <div class="browse-icon">${icon}</div>
+                    <div class="browse-title">${c.title}</div>
+                </div>
+                <div class="browse-desc">Spend less than ₹${c.targetValue?.toLocaleString()} on ${c.category} this month</div>
+                <div class="browse-meta">
+                    <span>${c.category} · monthly</span>
+                    <span class="browse-xp">🏆 +${c.rewardXp}</span>
+                </div>
+                ${joined
+                ? `<button class="btn-joined">Already joined</button>`
+                : `<button class="btn-join" onclick="joinChallenge('${c.id}')">Join challenge</button>`
+            }
+            </div>`;
+        }).join('');
+    }
+
+    function renderHistory() {
+        const completed = userChallenges.filter(uc => uc.completed);
+        const el = document.getElementById('historyList');
+        if (!completed.length) {
+            el.innerHTML = '<p class="empty">No completed challenges yet.</p>';
+            return;
+        }
+        el.innerHTML = completed.map(uc => {
+            const c = allChallenges.find(ch => ch.id === uc.challengeId);
+            if (!c) return '';
+            return `
+            <div class="history-item">
+                <span>✅ ${c.title}</span>
+                <span style="color:#f59e0b;font-weight:600">+${c.rewardXp} XP</span>
+            </div>`;
+        }).join('');
+    }
+
+    async function joinChallenge(challengeId) {
+        try {
+            const res = await fetch(`${API}/challenges/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, challengeId })
+            });
+            if (res.ok) {
+                loadAll();
+            } else {
+                alert('Already joined or error joining challenge.');
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    async function logout() {
+        try {
+            await fetch(`${API}/users/logout`, { method: 'POST' });
+        } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+    loadAll();
+</script>
+</body>
+</html>

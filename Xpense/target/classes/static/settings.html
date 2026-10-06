@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Settings</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f8fb; color: #1a1a2e; display: flex; min-height: 100vh; }
+        .sidebar { width: 210px; background: #fff; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; border-right: 1px solid #ebebf0; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 12px 20px; }
+        .brand-icon { width: 32px; height: 32px; background: #6c47ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+        .brand-text { font-size: 15px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: #999; }
+        .xp-section { background: #f8f8fb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .xp-label { font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+        .xp-level { font-size: 22px; font-weight: 700; margin: 2px 0; }
+        .xp-bar { height: 4px; background: #ebebf0; border-radius: 2px; margin-top: 6px; }
+        .xp-fill { height: 4px; background: #6c47ff; border-radius: 2px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #666; font-size: 14px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #f0eeff; color: #6c47ff; }
+        .nav-item.active { background: #6c47ff; color: #fff; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-section { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid #ebebf0; }
+        .user-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-email { font-size: 11px; color: #999; }
+        .logout-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; }
+        .main { margin-left: 210px; padding: 32px 36px; flex: 1; max-width: 700px; }
+        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { color: #999; font-size: 14px; margin-bottom: 28px; }
+        .settings-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .card-sub { font-size: 13px; color: #999; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 6px; }
+        .input-wrap { position: relative; }
+        .input-wrap span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #999; font-size: 14px; }
+        input, select {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid #ebebf0; border-radius: 10px;
+            font-size: 14px; color: #1a1a2e;
+            background: #fff; outline: none; transition: border 0.2s;
+        }
+        .has-prefix input { padding-left: 28px; }
+        input:focus, select:focus { border-color: #6c47ff; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .btn-save { padding: 10px 24px; background: #6c47ff; border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-save:hover { background: #5535e0; }
+        .btn-danger { padding: 10px 24px; background: #fff; border: 1px solid #ef4444; border-radius: 8px; color: #ef4444; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-danger:hover { background: #fef2f2; }
+        .msg { font-size: 13px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; display: none; }
+        .success { color: #22c55e; background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .error { color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; }
+        .divider { height: 1px; background: #ebebf0; margin: 20px 0; }
+        .personality-badge { display: inline-flex; align-items: center; gap: 8px; background: #f0eeff; border: 1px solid #d4c5ff; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #6c47ff; margin-bottom: 16px; }
+        .danger-zone { border-color: #fecaca; }
+        .danger-title { color: #ef4444; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">💸</div>
+        <div><div class="brand-text">XPense</div><div class="brand-sub">Level up your wallet</div></div>
+    </div>
+    <div class="xp-section">
+        <div class="xp-label"><span>Level</span><span id="sideXP">0 XP</span></div>
+        <div class="xp-level" id="sideLevel">1</div>
+        <div style="font-size:12px;color:#999" id="sideProgress">0/100</div>
+        <div class="xp-bar"><div class="xp-fill" id="sideXpFill" style="width:0%"></div></div>
+    </div>
+    <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+    <a href="expenses.html" class="nav-item">📋 Expenses</a>
+    <a href="budget.html" class="nav-item">🎯 Budgets</a>
+    <a href="challenges.html" class="nav-item">⚡ Challenges</a>
+    <a href="xp.html" class="nav-item">🏆 XP & Rewards</a>
+    <a href="friends.html" class="nav-item">👥 Friends</a>
+    <a href="monthly-report.html" class="nav-item">📅 Monthly Report</a>
+    <a href="settings.html" class="nav-item active">⚙️ Settings</a>
+    <div class="sidebar-bottom">
+        <div class="user-section">
+            <div class="user-avatar" id="avatarLetter">U</div>
+            <div class="user-info">
+                <div class="user-name" id="sideUserName">User</div>
+                <div class="user-email" id="sideUserEmail"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">⇥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Manage your profile, income and security.</div>
+
+    <!-- Profile -->
+    <div class="settings-card">
+        <div class="card-title">👤 Profile</div>
+        <div class="card-sub">Update your display name and view your money personality.</div>
+        <div class="personality-badge" id="personalityBadge">💸 Loading...</div>
+        <div class="form-group">
+            <label>Display Name</label>
+            <input type="text" id="displayName" placeholder="Your name" />
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="userEmail" disabled style="background:#f8f8fb;color:#999" />
+        </div>
+        <button class="btn-save" onclick="saveProfile()">Save Profile</button>
+        <div class="msg success" id="profileSuccess">Profile updated successfully!</div>
+        <div class="msg error" id="profileError"></div>
+    </div>
+
+    <!-- Income -->
+    <div class="settings-card">
+        <div class="card-title">💰 Income & Budget</div>
+        <div class="card-sub">Update your monthly income and financial targets.</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Monthly Take-home Salary (₹)</label>
+                <div class="input-wrap has-prefix">
+                    <span>₹</span>
+                    <input type="number" id="monthlyIncome" placeholder="0" min="0" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Fixed Monthly Expenses (₹)</label>
+                <div class="input-wrap has-prefix">
+                    <span>₹</span>
+                    <input type="number" id="fixedExpenses" placeholder="0" min="0" />
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Monthly Savings Target (₹)</label>
+                <div class="input-wrap has-prefix">
+                    <span>₹</span>
+                    <input type="number" id="savingsTarget" placeholder="0" min="0" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Monthly Investment Target (₹)</label>
+                <div class="input-wrap has-prefix">
+                    <span>₹</span>
+                    <input type="number" id="investmentTarget" placeholder="0" min="0" />
+                </div>
+            </div>
+        </div>
+
+        <!-- live breakdown -->
+        <div style="background:#f8f8fb;border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px">Live Breakdown</div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid #ebebf0">
+                <span style="color:#555">Spendable budget</span>
+                <span style="font-weight:600;color:#6c47ff" id="spendablePreview">₹0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+                <span style="color:#555">Daily budget</span>
+                <span style="font-weight:600;color:#22c55e" id="dailyPreview">₹0 / day</span>
+            </div>
+        </div>
+
+        <button class="btn-save" onclick="saveIncome()">Save Income Settings</button>
+        <div class="msg success" id="incomeSuccess">Income settings updated!</div>
+        <div class="msg error" id="incomeError"></div>
+    </div>
+
+    <!-- Security -->
+    <div class="settings-card">
+        <div class="card-title">🔒 Security</div>
+        <div class="card-sub">Change your password. You'll need your current password to confirm.</div>
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="currentPassword" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="newPassword" placeholder="Min 6 characters" />
+        </div>
+        <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirmPassword" placeholder="Repeat new password" />
+        </div>
+        <button class="btn-save" onclick="changePassword()">Change Password</button>
+        <div class="msg success" id="passwordSuccess">Password changed successfully!</div>
+        <div class="msg error" id="passwordError"></div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="settings-card danger-zone">
+        <div class="card-title danger-title">⚠️ Danger Zone</div>
+        <div class="card-sub">Permanently delete all your data. This cannot be undone.</div>
+        <button class="btn-danger" onclick="deleteAccount()">Delete Account</button>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (!userId) window.location.href = 'index.html';
+
+    document.getElementById('sideUserName').textContent = userName || 'User';
+    document.getElementById('avatarLetter').textContent = (userName || 'U')[0].toUpperCase();
+
+    // live breakdown calculator
+    ['monthlyIncome', 'fixedExpenses', 'savingsTarget', 'investmentTarget'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+    });
+
+    function updatePreview() {
+        const income = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+        const fixed = parseFloat(document.getElementById('fixedExpenses').value) || 0;
+        const savings = parseFloat(document.getElementById('savingsTarget').value) || 0;
+        const investment = parseFloat(document.getElementById('investmentTarget').value) || 0;
+        const spendable = Math.max(0, income - fixed - savings - investment);
+        const daily = Math.round(spendable / 30);
+        document.getElementById('spendablePreview').textContent = '₹' + spendable.toLocaleString();
+        document.getElementById('dailyPreview').textContent = '₹' + daily.toLocaleString() + ' / day';
+    }
+
+    async function loadSettings() {
+        const res = await fetch(`${API}/users/${userId}`);
+        if (res.ok) {
+            const user = await res.json();
+            const xp = user.totalXp || 0;
+            const level = Math.floor(xp / 100) + 1;
+            const progress = xp % 100;
+            document.getElementById('sideXP').textContent = xp + ' XP';
+            document.getElementById('sideLevel').textContent = level;
+            document.getElementById('sideProgress').textContent = progress + '/100';
+            document.getElementById('sideXpFill').style.width = progress + '%';
+
+            document.getElementById('displayName').value = user.displayName || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('monthlyIncome').value = user.monthlyIncome || '';
+            document.getElementById('fixedExpenses').value = user.fixedExpenses || '';
+            document.getElementById('savingsTarget').value = user.savingsTarget || '';
+            document.getElementById('investmentTarget').value = user.investmentTarget || '';
+
+            const personality = localStorage.getItem('personality') || '💸 Free Spender';
+            document.getElementById('personalityBadge').textContent = personality;
+
+            updatePreview();
+        }
+    }
+
+    async function saveProfile() {
+        const displayName = document.getElementById('displayName').value.trim();
+        if (!displayName) return showMsg('profileError', 'Display name cannot be empty.');
+
+        const res = await fetch(`${API}/users/update-profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, displayName })
+        });
+
+        if (res.ok) {
+            localStorage.setItem('userName', displayName);
+            document.getElementById('sideUserName').textContent = displayName;
+            document.getElementById('avatarLetter').textContent = displayName[0].toUpperCase();
+            showMsg('profileSuccess', 'Profile updated successfully!', true);
+        } else {
+            showMsg('profileError', 'Failed to update profile.');
+        }
+    }
+
+    async function saveIncome() {
+        const res = await fetch(`${API}/users/income-setup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId,
+                monthlyIncome: document.getElementById('monthlyIncome').value || '0',
+                fixedExpenses: document.getElementById('fixedExpenses').value || '0',
+                savingsTarget: document.getElementById('savingsTarget').value || '0',
+                investmentTarget: document.getElementById('investmentTarget').value || '0'
+            })
+        });
+
+        if (res.ok) {
+            showMsg('incomeSuccess', 'Income settings updated!', true);
+        } else {
+            showMsg('incomeError', 'Failed to update income settings.');
+        }
+    }
+
+    async function changePassword() {
+        const current = document.getElementById('currentPassword').value;
+        const newPwd = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (!current || !newPwd || !confirm) return showMsg('passwordError', 'Please fill in all fields.');
+        if (newPwd.length < 6) return showMsg('passwordError', 'New password must be at least 6 characters.');
+        if (newPwd !== confirm) return showMsg('passwordError', 'Passwords do not match.');
+
+        const res = await fetch(`${API}/users/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, currentPassword: current, newPassword: newPwd })
+        });
+
+        if (res.ok) {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            showMsg('passwordSuccess', 'Password changed successfully!', true);
+        } else {
+            const text = await res.text();
+            showMsg('passwordError', text || 'Incorrect current password.');
+        }
+    }
+
+    async function deleteAccount() {
+        if (!confirm('Are you sure? This will permanently delete all your data.')) return;
+        if (!confirm('This cannot be undone. Are you absolutely sure?')) return;
+
+        const res = await fetch(`${API}/users/${userId}`, { method: 'DELETE' });
+        if (res.ok) {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        } else {
+            alert('Failed to delete account.');
+        }
+    }
+
+    function showMsg(id, msg, isSuccess) {
+        const el = document.getElementById(id);
+        if (msg) el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    async function logout() {
+        try { await fetch(`${API}/users/logout`, { method: 'POST' }); } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+
+    loadSettings();
+</script>
+</body>
+</html>

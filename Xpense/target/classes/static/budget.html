@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xpense - Budgets</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f8fb; color: #1a1a2e; display: flex; min-height: 100vh; }
+        .sidebar { width: 210px; background: #fff; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: fixed; height: 100vh; border-right: 1px solid #ebebf0; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 8px 12px 20px; }
+        .brand-icon { width: 32px; height: 32px; background: #6c47ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+        .brand-text { font-size: 15px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: #999; }
+        .xp-section { background: #f8f8fb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .xp-label { font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+        .xp-level { font-size: 22px; font-weight: 700; margin: 2px 0; }
+        .xp-bar { height: 4px; background: #ebebf0; border-radius: 2px; margin-top: 6px; }
+        .xp-fill { height: 4px; background: #6c47ff; border-radius: 2px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; color: #666; font-size: 14px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #f0eeff; color: #6c47ff; }
+        .nav-item.active { background: #6c47ff; color: #fff; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-section { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid #ebebf0; }
+        .user-avatar { width: 32px; height: 32px; background: #6c47ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-email { font-size: 11px; color: #999; }
+        .logout-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; }
+        .main { margin-left: 210px; padding: 32px 36px; flex: 1; }
+        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub { color: #999; font-size: 14px; margin-bottom: 24px; }
+        .budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .budget-card { background: #fff; border: 1px solid #ebebf0; border-radius: 12px; padding: 20px; }
+        .budget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .budget-cat { font-size: 15px; font-weight: 600; }
+        .budget-status { font-size: 12px; color: #f59e0b; font-weight: 500; }
+        .budget-status.safe { color: #22c55e; }
+        .budget-status.over { color: #ef4444; }
+        .budget-spent { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .budget-meta { font-size: 12px; color: #999; margin-bottom: 12px; }
+        .progress-bar { height: 6px; background: #ebebf0; border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+        .budget-input-row { display: flex; gap: 8px; }
+        .budget-input { flex: 1; padding: 10px 14px; border: 1px solid #ebebf0; border-radius: 8px; font-size: 14px; outline: none; }
+        .budget-input:focus { border-color: #6c47ff; }
+        .btn-save { padding: 10px 18px; background: #6c47ff; border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-save:hover { background: #5535e0; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">💸</div>
+        <div><div class="brand-text">XPense</div><div class="brand-sub">Level up your wallet</div></div>
+    </div>
+    <div class="xp-section">
+        <div class="xp-label"><span>Level</span><span id="sideXP">0 XP</span></div>
+        <div class="xp-level" id="sideLevel">1</div>
+        <div style="font-size:12px;color:#999" id="sideProgress">0/100</div>
+        <div class="xp-bar"><div class="xp-fill" id="sideXpFill" style="width:0%"></div></div>
+    </div>
+    <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+    <a href="expenses.html" class="nav-item">📋 Expenses</a>
+    <a href="budget.html" class="nav-item active">🎯 Budgets</a>
+    <a href="challenges.html" class="nav-item">⚡ Challenges</a>
+    <a href="xp.html" class="nav-item">🏆 XP & Rewards</a>
+    <a href="friends.html" class="nav-item">👥 Friends</a>
+    <a href="monthly-report.html" class="nav-item">📅 Monthly Report</a>
+    <a href="settings.html" class="nav-item">⚙️ Settings</a>
+    <div class="sidebar-bottom">
+        <div class="user-section">
+            <div class="user-avatar" id="avatarLetter">U</div>
+            <div class="user-info">
+                <div class="user-name" id="sideUserName">User</div>
+                <div class="user-email" id="sideUserEmail"></div>
+            </div>
+            <button class="logout-btn" onclick="logout()">⇥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-title">Budgets</div>
+    <div class="page-sub" id="budgetSub">Monthly limits per category.</div>
+    <div class="budget-grid" id="budgetGrid"></div>
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api';
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    if (!userId) window.location.href = 'index.html';
+
+    document.getElementById('sideUserName').textContent = userName || 'User';
+    document.getElementById('avatarLetter').textContent = (userName || 'U')[0].toUpperCase();
+
+    const CATEGORIES = ['Food', 'Groceries', 'Travel', 'Entertainment', 'Online Shopping'];
+    const now = new Date();
+    document.getElementById('budgetSub').textContent =
+        `Monthly limits per category for ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}.`;
+
+    let budgets = [];
+    let expenses = [];
+
+    async function loadAll() {
+        const userRes = await fetch(`${API}/users/${userId}`);
+        if (userRes.ok) {
+            const user = await userRes.json();
+            const xp = user.totalXp || 0;
+            const level = Math.floor(xp / 100) + 1;
+            const progress = xp % 100;
+            document.getElementById('sideXP').textContent = xp + ' XP';
+            document.getElementById('sideLevel').textContent = level;
+            document.getElementById('sideProgress').textContent = progress + '/100';
+            document.getElementById('sideXpFill').style.width = progress + '%';
+        }
+
+        const [budRes, expRes] = await Promise.all([
+            fetch(`${API}/budgets?userId=${userId}`),
+            fetch(`${API}/expenses?userId=${userId}`)
+        ]);
+        if (budRes.ok) budgets = await budRes.json();
+        if (expRes.ok) expenses = await expRes.json();
+        renderBudgets();
+    }
+
+    function renderBudgets() {
+        const grid = document.getElementById('budgetGrid');
+        grid.innerHTML = CATEGORIES.map(cat => {
+            const budget = budgets.find(b => b.category === cat);
+            const limit = budget ? budget.monthlyLimit : 0;
+            const spent = expenses.filter(e => {
+                const d = new Date(e.expenseDate);
+                return e.category === cat && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).reduce((s, e) => s + e.amount, 0);
+
+            const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+            const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
+            const statusText = pct >= 100 ? 'Over budget!' : pct >= 80 ? 'Almost there' : limit > 0 ? 'On track' : '';
+            const statusClass = pct >= 100 ? 'over' : pct >= 80 ? '' : 'safe';
+
+            return `
+            <div class="budget-card">
+                <div class="budget-header">
+                    <div class="budget-cat">${cat}</div>
+                    <div class="budget-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="budget-spent">₹${spent.toLocaleString()}</div>
+                <div class="budget-meta">spent of ${limit > 0 ? '₹' + limit.toLocaleString() : 'no budget'}</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:${pct}%;background:${color}"></div>
+                </div>
+                <div class="budget-input-row">
+                    <input class="budget-input" type="number" id="input-${cat}"
+                           placeholder="Set monthly limit (₹)"
+                           value="${limit > 0 ? limit : ''}" min="0" />
+                    <button class="btn-save" onclick="saveBudget('${cat}')">Save</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function saveBudget(category) {
+        const input = document.getElementById(`input-${category}`);
+        const limit = input.value;
+        if (!limit || limit <= 0) return alert('Enter a valid limit');
+        const res = await fetch(`${API}/budgets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, category, limit })
+        });
+        if (res.ok) loadAll();
+    }
+
+    async function logout() {
+        try {
+            await fetch(`${API}/users/logout`, { method: 'POST' });
+        } catch(e) {}
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+    loadAll();
+</script>
+</body>
+</html>

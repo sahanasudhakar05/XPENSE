@@ -1,0 +1,10 @@
+spring.datasource.url=jdbc:postgresql://YOUR_POOLER_URL:5432/postgres?sslmode=require
+spring.datasource.username=YOUR_USERNAME
+spring.datasource.password=YOUR_PASSWORD
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+server.port=8080
+spring.datasource.hikari.maximum-pool-size=3
+spring.datasource.hikari.minimum-idle=1
+openrouter.api.key=YOUR_KEY
